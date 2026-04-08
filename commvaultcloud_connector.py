@@ -121,24 +121,6 @@ def field_mapper(field_name) -> str:
     return field_map[field_name]
 
 
-def get_backup_anomaly(anomaly_id: int) -> str:
-    """
-    Get Anomaly type from anomaly id
-
-    Args:
-        anomaly_id (int): The anomaly id.
-
-    Returns:
-        str: The type of anomaly corresponding to the given id, or "Undefined" if not found.
-    """
-    anomaly_dict = {
-        0: Constants.ANOMALY_TYPE_UNDEFINED,
-        1: Constants.ANOMALY_TYPE_1,
-        2: Constants.ANOMALY_TYPE_2,
-        3: Constants.ANOMALY_TYPE_3,
-    }
-    return anomaly_dict.get(anomaly_id, Constants.ANOMALY_TYPE_UNDEFINED)
-
 
 def get_unique_guid():
     """
@@ -557,174 +539,6 @@ class CommvaultCloudConnector(BaseConnector):
         )
         response = response.get("subClientProperties", [{}])[0].get("content")
         return response
-
-    def define_severity(self, anomaly_sub_type):
-        """
-        Function to get severity from anomaly sub type
-
-        Args:
-            anomaly_sub_type (str): The anomaly sub type.
-
-        Returns:
-            str: The severity.
-        """
-        severity = None
-        if anomaly_sub_type in ("File Type", "Threat Analysis"):
-            severity = Constants.SEVERITY_HIGH
-        elif anomaly_sub_type == "File Activity":
-            severity = Constants.SEVERITY_MEDIUM
-        elif anomaly_sub_type and "Threat Scan" in anomaly_sub_type:
-            severity = Constants.SEVERITY_HIGH
-        return severity
-
-    def fetch_file_details(self, action_result, job_id, subclient_id, anomaly_sub_type):
-        """
-        Function to fetch the scanned folders list during the backup job
-
-        Args:
-            action_result: The action result object.
-            job_id: The job ID.
-            subclient_id: The subclient ID.
-            anomaly_sub_type: The Anomaly subtype
-
-        Returns:
-            tuple: A tuple containing lists of files and folders.
-        """
-        self.debug_print('Fetching file details')
-        folders_list = []
-        if job_id is None:
-            return [], []
-        files_list = self.get_files_list(action_result, job_id, anomaly_sub_type)
-        folder_response = self.get_subclient_content_list(action_result, subclient_id)
-        if folder_response is not None:
-            for resp in folder_response:
-                folders_list.append(resp[Constants.PATH_KEY])
-        return files_list, folders_list
-
-    def get_incident_details(self, action_result, message: str):
-        """
-        Function to get incident details from the alert description
-
-        Args:
-            action_result: The action result object.
-            message (str): The message containing the alert description.
-
-        Returns:
-            dict: Dictionary containing incident details.
-        """
-        anomaly_sub_type = extract_from_regex(
-            message,
-            "0",
-            rf"{field_mapper('anomaly_sub_type')}:\[(.*?)\]",
-        )
-        if anomaly_sub_type is None or anomaly_sub_type == "0":
-            return None
-        anomaly_sub_type = get_backup_anomaly(int(anomaly_sub_type))
-        job_id = extract_from_regex(
-            message,
-            "0",
-            rf"{field_mapper(Constants.JOB)} \[(.*?)\]",
-        )
-        if job_id == "0" or job_id is None:
-            job_id = extract_from_regex(
-                message,
-                "0",
-                rf"{field_mapper(Constants.JOB_ID)}:\[(.*?)\]",
-            )
-
-        description = format_alert_description(message)
-        job_details = self.get_job_details(action_result, job_id)
-        if job_details is None:
-            self.debug_print(f"Invalid job [{job_id}]")
-            return None
-        job_start_time = int(
-            job_details.get("jobs", [{}])[0].get("jobSummary", {}).get("jobStartTime")
-        )
-        job_end_time = int(
-            job_details.get("jobs", [{}])[0].get("jobSummary", {}).get("jobEndTime")
-        )
-        subclient_id = (
-            job_details.get("jobs", [{}])[0].get("jobSummary", {}).get("subclient", {}).get("subclientId")
-        )
-        # to-do
-        if subclient_id != 0:
-            files_list, scanned_folder_list = self.fetch_file_details(action_result, job_id, subclient_id,
-                                                                      anomaly_sub_type)
-            if anomaly_sub_type == Constants.ANOMALY_TYPE_3 or anomaly_sub_type == Constants.ANOMALY_TYPE_2:
-                self.debug_print('There are [{}] files'.format(len(files_list)))
-                files_list = [d['fullPath'] for d in files_list]
-        else:
-            files_list, scanned_folder_list = [], []
-
-        details = {
-            "subclient_id": subclient_id,
-            "files_list": files_list,
-            "scanned_folder_list": scanned_folder_list,
-            "anomaly_sub_type": anomaly_sub_type,
-            "severity": self.define_severity(anomaly_sub_type),
-            "originating_client": extract_from_regex(
-                message,
-                "",
-                r"{} \[(.*?)\]".format(field_mapper(Constants.ORIGINATING_CLIENT)),
-            ),
-            "affected_files_count": if_zero_set_none(
-                extract_from_regex(
-                    message,
-                    None,
-                    r"{}:\[(.*?)\]".format(
-                        field_mapper(Constants.AFFECTED_FILES_COUNT)
-                    ),
-                )
-            ),
-            "modified_files_count": if_zero_set_none(
-                extract_from_regex(
-                    message,
-                    None,
-                    r"{}FileCount:\[(.*?)\]".format(
-                        field_mapper(Constants.MODIFIED_FILES_COUNT)
-                    ),
-                )
-            ),
-            "deleted_files_count": if_zero_set_none(
-                extract_from_regex(
-                    message,
-                    None,
-                    r"{}FileCount:\[(.*?)\]".format(
-                        field_mapper(Constants.DELETED_FILES_COUNT)
-                    ),
-                )
-            ),
-            "renamed_files_count": if_zero_set_none(
-                extract_from_regex(
-                    message,
-                    None,
-                    r"{}FileCount:\[(.*?)\]".format(
-                        field_mapper(Constants.RENAMED_FILES_COUNT)
-                    ),
-                )
-            ),
-            "created_files_count": if_zero_set_none(
-                extract_from_regex(
-                    message,
-                    None,
-                    r"{}FileCount:\[(.*?)\]".format(
-                        field_mapper(Constants.CREATED_FILES_COUNT)
-                    ),
-                )
-            ),
-            "job_start_time": datetime.utcfromtimestamp(job_start_time).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            ),
-            "job_end_time": datetime.utcfromtimestamp(job_end_time).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            ),
-            "job_id": job_id,
-            "external_link": extract_from_regex(
-                message, "", "href='(.*?)'", 'href="(.*?)"'
-            ),
-            "description": description,
-        }
-        return details
 
     def get_incident_details_v2(self, event: dict):
         """
@@ -1225,7 +1039,7 @@ class CommvaultCloudConnector(BaseConnector):
         self._max_fetch = param.get("container_count", "")
         action_result = self.add_action_result(ActionResult(dict(param)))
         last_run = self._state.get("last_run")
-        last_run = None
+        #last_run = None
         if last_run is None:
             self.debug_print("Run Mode: First Scheduled Poll")
             back_fill = datetime.utcnow().astimezone() - timedelta(days=30)
