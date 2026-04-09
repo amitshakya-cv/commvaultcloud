@@ -523,23 +523,6 @@ class CommvaultCloudConnector(BaseConnector):
             events.extend(major_events)
         return events
 
-    def get_subclient_content_list(self, action_result, subclient_id):
-        """
-        Get content from subclient
-
-        Args:
-            action_result: The action result object.
-            subclient_id: The subclient ID.
-
-        Returns:
-            str: The content from the subclient.
-        """
-        ret_val, response = self._make_rest_call(
-            "/Subclient/" + str(subclient_id), action_result, method='get'
-        )
-        response = response.get("subClientProperties", [{}])[0].get("content")
-        return response
-
     def get_incident_details_v2(self, event: dict):
         """
         Parse incident details directly from an event object.
@@ -641,76 +624,6 @@ class CommvaultCloudConnector(BaseConnector):
             "description": description,
         }
         return details
-
-    def get_job_details(self, action_result, job_id):
-        """
-        Get job details by job Id
-
-        Args:
-            action_result: The action result object.
-            job_id: The job ID.
-
-        Returns:
-            dict: Dictionary containing job details.
-        """
-        out = None
-        ret_val, response = self._make_rest_call(
-            "/Job/" + str(job_id), action_result, method='get'
-        )
-        if ("totalRecordsWithoutPaging" in response) and (
-                int(response["totalRecordsWithoutPaging"]) > 0
-        ):
-            out = response
-        return out
-
-    def get_files_list(self, action_result, job_id, anomaly_sub_type):
-        """
-        Get file list from analysis job
-
-        Args:
-            action_result: The action result object.
-            job_id: The job ID.
-            anomaly_sub_type: Anomaly subtype
-
-        Returns:
-            list: List of files.
-        """
-        file_list = []
-        # print('Anomaly type [{}]'.format(anomaly_sub_type))
-        if anomaly_sub_type == Constants.ANOMALY_TYPE_2:
-            base_payload = Constants.ANOMALY_TYPE_2_PAYLOAD
-        elif anomaly_sub_type == Constants.ANOMALY_TYPE_3:
-            base_payload = Constants.ANOMALY_TYPE_3_PAYLOAD
-        else:
-            # print('File listing is not supporting for anomaly sub type [{}]'.format(anomaly_sub_type))
-            return file_list
-        # print(base_payload)
-        base_payload = base64.b64decode(base_payload).decode('utf-8')
-        base_payload = json.loads(base_payload)
-        base_payload["advOptions"]["advConfig"]["browseAdvancedConfigBrowseByJob"]["jobId"] = int(job_id)
-        # print(base_payload)
-        ret_val, resp = self._make_rest_call(
-            "/DoBrowse", action_result, data=json.dumps(base_payload), method='post'
-        )
-        if resp is None:
-            return file_list
-        browse_responses = resp.get("browseResponses", [])
-        # print('Browse response [{}]'.format(browse_responses))
-        for browse_resp in browse_responses:
-            if browse_resp.get("respType") == 0:
-                browse_result = browse_resp.get("browseResult")
-                if "dataResultSet" in browse_result:
-                    for data_result_set in browse_result.get("dataResultSet"):
-                        file = {}
-                        filepath = data_result_set.get("path")
-                        file["sizeinkb"] = data_result_set.get("size")
-                        file["folder"] = "\\".join(filepath.split("\\")[:-1])
-                        file["filename"] = data_result_set.get("displayName")
-                        if anomaly_sub_type == Constants.ANOMALY_TYPE_2:
-                            file["fullPath"] = data_result_set.get("displayPath")
-                        file_list.append(file)
-        # print('File list [{}]'.format(file_list))
-        return file_list
 
     def get_client_id(self, action_result, client_name):
         """
