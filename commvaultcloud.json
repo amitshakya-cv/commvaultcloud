@@ -16,7 +16,7 @@
             "name": "Amit Shakya"
         }
     ],
-    "license": "Copyright (c) Commvault Systems, 2024-2025",
+    "license": "Copyright (c) Commvault Systems, 2024-2026",
     "app_version": "2.0.0",
     "utctime_updated": "2024-04-24T07:42:46.413306Z",
     "package_name": "phantom_commvaultcloud",

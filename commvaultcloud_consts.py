@@ -1,6 +1,6 @@
 # File: commvaultcloud_consts.py
 #
-# Copyright (c) Commvault Systems, 2024
+# Copyright (c) Commvault Systems, 2024-2026
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@ RENAMED_FILES_COUNT = "renamed_files_count"
 CREATED_FILES_COUNT = "created_files_count"
 FACILITY = "Commvault"
 DESCRIPTION = "description"
-SEVERITY = 'severity'
+SEVERITY = "severity"
 # Splunk container specific constants
-CONTAINER_LABEL = 'events'
-CONTAINER_STATUS_OPEN = 'open'
+CONTAINER_LABEL = "events"
+CONTAINER_STATUS_OPEN = "open"
 SEVERITY_MEDIUM = "medium"
 # Sensitivity amber: confidential
 SENSITIVITY_AMBER = "amber"
@@ -38,21 +38,14 @@ ERR_MSG_UNAVAILABLE = "Error message unavailable. Please check the asset configu
 
 # SUPPORTED_EVENT_CODES = ['7:211', '7:212', '7:293', '
 # 7:269', '14:337', '14:338', '69:59', '7:333', '69:60','35:5575']
-SUPPORTED_EVENT_CODES = ['69:59','17:193','69:60','14:337','14:338','7:349']
+SUPPORTED_EVENT_CODES = ["69:59", "17:193", "69:60", "14:337", "14:338", "7:349"]
 EVENT_CODE_TO_ANOMALY_TYPE = {
-    '69:59': 'Threat Scan - Malware Detection',
-    '17:193': 'Threat Scan - Malware Detection',
-    '69:60': 'Threat Scan - Encryption Detection',
-    '14:337': 'Threat Scan - Anomaly Detection',
-    '14:338': 'Threat Scan - Anomaly Detection',
-    '7:349': 'Threat Scan - Anomaly Detection'
+    "69:59": "Threat Scan - Malware Detection",
+    "17:193": "Threat Scan - Malware Detection",
+    "69:60": "Threat Scan - Encryption Detection",
+    "14:337": "Threat Scan - Anomaly Detection",
+    "14:338": "Threat Scan - Anomaly Detection",
+    "7:349": "Threat Scan - Anomaly Detection",
 }
-EVENT_CODE_TO_SEVERITY = {
-    '69:59': 'high',
-    '17:193': 'high',
-    '69:60': 'high',
-    '14:337': 'medium',
-    '14:338': 'medium',
-    '7:349': 'medium'
-}
+EVENT_CODE_TO_SEVERITY = {"69:59": "high", "17:193": "high", "69:60": "high", "14:337": "medium", "14:338": "medium", "7:349": "medium"}
 PARTNER_ID = 5
