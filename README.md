@@ -34,7 +34,7 @@ This table lists the configuration variables required to operate Commvault Cloud
 VARIABLE | REQUIRED | TYPE | DESCRIPTION
 -------- | -------- | ---- | -----------
 **CommvaultEndpoint** | required | string | Commvault End Point |
-**CommvaultAccessToken** | required | string | Commvault Access Token |
+**CommvaultAccessToken** | required | password | Commvault Access Token |
 **PhantomAPIToken** | required | password | Phantom API token (For creating new events) |
 
 ### Supported Actions
@@ -161,7 +161,7 @@ ______________________________________________________________________
 
 Auto-generated Splunk SOAR Connector documentation.
 
-Copyright 2025 Splunk Inc.
+Copyright 2026 Splunk Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
